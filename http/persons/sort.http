@@ -1,0 +1,62 @@
+### 정상 케이스
+POST http://localhost:8080/api/v1/persons/sort
+Content-Type: application/json
+
+{
+    "persons": [
+        {
+            "id": "ID1001",
+            "name": "Tom",
+            "age": 10,
+            "height": 175
+        },
+        {
+            "id": "ID1324",
+            "name": "Alice",
+            "age": 20,
+            "height": 170
+        },
+        {
+            "id": "ID1323",
+            "name": "Malo",
+            "age": 34,
+            "height": 171
+        }
+    ],
+    "sortBy": "name",
+    "sortOrder": "asc"
+}
+
+### 파라미터 에러
+POST http://localhost:8080/api/v1/persons/sort
+Content-Type: application/json
+
+{
+    "persons": [
+        {
+            "id": "ID1001",
+            "name": "Tom",
+            "age": 101,
+            "height": 175
+        }
+    ],
+    "sortBy": "name",
+    "sortOrder": "asc"
+}
+
+### asc, desc가 아닌값일떄 에러반환
+POST http://localhost:8080/api/v1/persons/sort
+Content-Type: application/json
+
+{
+    "persons": [
+        {
+            "id": "ID1001",
+            "name": "Tom",
+            "age": 50,
+            "height": 175
+        }
+    ],
+    "sortBy": "name",
+    "sortOrder": "sort"
+}
