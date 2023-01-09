@@ -6,3 +6,4 @@ CREATE TABLE company
     country VARCHAR(100) NOT NULL,
     PRIMARY KEY (company_id)
 );
+

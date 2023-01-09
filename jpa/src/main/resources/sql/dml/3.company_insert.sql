@@ -1,0 +1,28 @@
+INSERT INTO COMPANY
+    (founding_date, name, country)
+VALUES
+    ('2008-03-07','Google','USA'),
+    ('2005-11-04','Amazon', 'USA'),
+    ('1999-03-23','Meta', 'USA'),
+    ('1970-02-17','Samsung', 'KOREA'),
+    ('2010-02-27','Kakao', 'KOREA'),
+    ('1999-02-28','Tsmc', 'TAIWAN'),
+    ('2003-03-12','Toyota', 'JAPAN'),
+    ('2001-01-12','Honda', 'JAPAN'),
+    ('2002-03-07','Shell', 'UK'),
+    ('1970-01-01', 'Acme Inc.', 'USA'),
+    ('1980-03-15', 'XYZ Corp.', 'CANADA'),
+    ('1990-05-20', 'FooBar Inc.', 'GERMANY'),
+    ('2000-07-01', 'Baz Qux Co.', 'UK'),
+    ('2010-09-10', 'ABC Co.', 'AUSTRALIA'),
+    ('2011-01-01', 'MyCompany Inc.', 'USA'),
+    ('2012-02-29', 'YourCompany Corp.', 'CANADA'),
+    ('2013-03-30', 'HisCompany Inc.', 'GERMANY'),
+    ('2014-04-01', 'HerCompany Co.', 'UK'),
+    ('2015-05-02', 'TheirCompany Inc.', 'AUSTRALIA'),
+    ('2022-01-01', 'Ghi Inc.', 'USA'),
+    ('2022-03-15', 'Jkl Corp.', 'CANADA'),
+    ('2022-05-20', 'Mno Corp.', 'GERMANY'),
+    ('2022-07-01', 'Pqr Co.', 'UK'),
+    ('1999-11-11', 'Def Inc.', 'MEXICO'),
+    ('2022-09-10', 'Stu Co.', 'AUSTRALIA');
