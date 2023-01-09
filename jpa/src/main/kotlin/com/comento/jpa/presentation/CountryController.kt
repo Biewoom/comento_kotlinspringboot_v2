@@ -1,4 +1,4 @@
-package com.comento.jpa.presentation.country
+package com.comento.jpa.presentation
 
 import com.comento.jpa.domain.CountryNotFoundException
 import com.comento.jpa.service.CountryService

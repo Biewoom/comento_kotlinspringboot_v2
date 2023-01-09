@@ -11,10 +11,10 @@ class CompanyService(
 ) {
 
     fun findCompaniesByCountryName(countryName: String): List<Company> {
-        val companies = companyRepository.findCompaniesByCountry(countryName.uppercase())
+        val companies = companyRepository.findAllByCountry(countryName.uppercase())
         if ( companies.isEmpty() ) throw CompanyNotFoundException("`$countryName` Was Not Found")
 
-        return companies.sortedBy { it.foundingDate }
+        return companies.sortedBy { it.foundingYMD }
     }
 
 
