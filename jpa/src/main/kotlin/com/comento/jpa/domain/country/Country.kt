@@ -15,7 +15,6 @@ class Country(
     zipCode: Long,
     name: String,
     capitalCity: String,
-    continent: String
 ): Serializable {
     @Id @Column(name = "zip_code", nullable = false, unique = true)
     private val zipCode: Long = zipCode
