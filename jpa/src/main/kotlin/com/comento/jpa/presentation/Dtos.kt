@@ -3,6 +3,7 @@ package com.comento.jpa.presentation
 import com.comento.jpa.domain.common.enums.Gender
 import com.comento.jpa.domain.common.vo.YMD
 import com.comento.jpa.domain.person.Person
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
@@ -41,7 +42,7 @@ data class BlindDateDto (
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(title = "Person DTO")
 data class PersonDto (
-    @Schema(title = "Person Id", example = "10") val personId: Int?,
+    @Schema(title = "Person Id", example = "10") val personId: Long?,
     @Schema(title = "나이", example = "45") val age: Int?,
     @Schema(title = "키", example = "175") val height: Int?,
     @Schema(title = "몸무게", example = "73") val weight: Int?,
@@ -50,10 +51,24 @@ data class PersonDto (
     @Schema(title = "결혼 여부", example = "true") val isMarried: Boolean?,
     @Schema(title = "회사 이름", example = "Apple") val company: String?,
     @Schema(title = "나라 이름", example = "KOREA") val country: String
-)
+){
+    @get:JsonIgnore
+    val genderNotNull = gender ?: Gender.UNKNOWN
+
+    @get:JsonIgnore
+    val isMarriedNotNull = isMarried ?: false
+
+    init {
+        age?.let { if (it !in (0..100)) throw IllegalArgumentException("`age: $age` is not between 0 and 100") }
+        height?.let { if (it !in (130..200) ) throw IllegalArgumentException("`height: $height` is not between 130 and 200") }
+        weight?.let { if (it !in (30..200) ) throw IllegalArgumentException("`weight: $weight` is not between 30 and 200") }
+    }
+    companion object
+
+}
 
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy::class)
 data class ResultDto(
     @Schema(title = "결과 타입들", example = "[1,0,1]" ) val resultTypes: List<Int>,
-    @Schema(title = "Person Id들", example = "[10, 1, 49, 3]")  val personIds: List<Int>
+    @Schema(title = "Person Id들", example = "[10, 1, 49, 3]")  val personIds: List<Long>
 )

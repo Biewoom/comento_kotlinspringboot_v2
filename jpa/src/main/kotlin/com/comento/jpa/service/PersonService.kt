@@ -4,9 +4,9 @@ import com.comento.jpa.domain.BlindDateNotFoundException
 import com.comento.jpa.domain.PersonNotFoundException
 import com.comento.jpa.domain.common.enums.Gender
 import com.comento.jpa.domain.person.Person
-import com.comento.jpa.domain.person.PersonRepository
 import com.comento.jpa.logger
 import com.comento.jpa.presentation.BlindDateDto
+import com.comento.jpa.domain.person.PersonRepository
 import com.comento.jpa.presentation.PersonDto
 import com.comento.jpa.presentation.ResultDto
 import org.springframework.stereotype.Service
@@ -17,82 +17,77 @@ class PersonService(
     private val personRepository: PersonRepository
 ) {
 
+    fun findBlindDateCoupleList(ageDiff: Int, country: String?): List<Pair<BlindDateDto, BlindDateDto>> {
 
-    fun findBlindDateCoupleList(ageDiff: Int): List<Pair<BlindDateDto, BlindDateDto>> {
+        val men = personRepository.findPeopleByGenderAndAgeNotNull(Gender.MALE)
+            .filter { man -> country?.let { man.country == it } ?: true }
+            .ifEmpty { throw PersonNotFoundException("men cannot be found") }
+        val women = personRepository.findPeopleByGenderAndAgeNotNull(Gender.FEMALE)
+            .filter { woman -> country?.let { woman.country == it } ?: true }
+            .ifEmpty { throw PersonNotFoundException("women cannot be found") }
 
-        val men = personRepository.findPeopleByGenderAndAgeNotNull(Gender.MALE).ifEmpty { throw PersonNotFoundException("men cannot be found") }
-        val women = personRepository.findPeopleByGenderAndAgeNotNull(Gender.FEMALE).ifEmpty { throw PersonNotFoundException("women cannot be found") }
+        val matchesWhichManIsOlder = men.asSequence()
+            .map { man ->
+                    women.filter { man.ageNotNull - ageDiff <= it.ageNotNull && it.ageNotNull <= man.ageNotNull }
+                    .map { woman -> Pair(BlindDateDto.fromPerson(man), BlindDateDto.fromPerson(woman) ) } }
+            .flatten()
+            .toList()
+            .also { logger.info { it } }
 
-        val ll = mutableListOf<Pair<BlindDateDto, BlindDateDto>>()
-
-        men.forEach { man ->
-            women
-                .filter { man.age!! - ageDiff <= it.age!! && it.age!! <= man.age!! }
-                .forEach { woman ->
-                    ll.add(Pair(BlindDateDto.fromPerson(man), BlindDateDto.fromPerson(woman)))
+        val matchesWhichWomanIsOlder =  men.asSequence()
+            .map { man ->
+                    women.filter { man.ageNotNull < it.ageNotNull && it.ageNotNull <= man.ageNotNull + ageDiff  }
+                    .map { woman -> Pair(BlindDateDto.fromPerson(woman), BlindDateDto.fromPerson(man)) }
             }
-            women
-                .filter { man.age!! < it.age!! && it.age!! <= man.age!! + ageDiff  }
-                .forEach{ woman ->
-                    ll.add(Pair(BlindDateDto.fromPerson(woman), BlindDateDto.fromPerson(man)))
-                }
-        }
+            .flatten()
+            .toList()
+            .also { logger.info { it } }
 
-        return ll.ifEmpty { throw BlindDateNotFoundException("BlindDate Candidates with ageDiff ` $ageDiff ` cannot be Found") }
+        val finalMatches = matchesWhichManIsOlder + matchesWhichWomanIsOlder
+
+        return finalMatches.ifEmpty { throw BlindDateNotFoundException("BlindDate Candidates with ageDiff ` $ageDiff ` cannot be Found") }
     }
 
     @Transactional
     fun registerOrSavePersons(personRequests: List<PersonDto>): ResultDto {
 
-        val resultTypes = (1..personRequests.size).map { 0 }.toMutableList()
-        val personIds = (1..personRequests.size).map{ 2 }.toMutableList()
-
         val existedPersonIds = personRequests
-            .filter { personDto -> personDto.personId?.let { personRepository.existsBy_id(it) } ?: false }
+            .asSequence()
             .map { it.personId }
+            .filter { id -> id?.let { personRepository.existsById(id) } ?: false }
             .toSet()
 
         logger.info { "existedPersons: $existedPersonIds" }
 
-        personRequests
+        val resultAndIdPairs = personRequests
             .map { personDto -> convertToPerson(personDto) }
-            .forEachIndexed { index, person ->
-                val id = personRepository.save(person).id
-
-                if ( id in existedPersonIds ) resultTypes[index] = 0
-                else resultTypes[index] = 1
-
-                personIds[index] = id.toInt()
+            .map { person ->
+                when (val id = personRepository.save(person).id) {
+                    in existedPersonIds -> Pair(0, id)
+                    else -> Pair(1, id)
+                }
             }
 
         return ResultDto(
-                resultTypes = resultTypes,
-                personIds = personIds
+                resultTypes = resultAndIdPairs.map { it.first },
+                personIds = resultAndIdPairs.map { it.second }
             )
     }
 
-    private fun convertToPerson(personDto: PersonDto): Person {
-        val ( personId: Int?, age: Int?, height: Int?, weight: Int?,
-            name: String, gender: Gender?, isMarried: Boolean?, company: String?, country: String
-        ) = personDto
-
-        age?.let { if (it !in (0..100)) throw IllegalArgumentException("`age: $age` is not between 0 and 100") }
-        height?.let { if (it !in (130..200) ) throw IllegalArgumentException("`height: $height` is not between 130 and 200") }
-        weight?.let { if (it !in (30..200) ) throw IllegalArgumentException("`weight: $weight` is not between 30 and 200") }
-
-        val person = Person(
-            name = name,
-            gender = gender ?: Gender.UNKNOWN,
-            country = country
-        )
-        personId?.let { person.updateId(it) }
-        person.age = age
-        person.height = height
-        person.weight = weight
-        person.isMarried = isMarried ?: false
-        person.company = company
-        return person
-    }
-
+    private fun convertToPerson(personDto: PersonDto): Person =
+        Person (
+            name = personDto.name,
+            gender = personDto.genderNotNull,
+            country = personDto.country
+        ).apply {
+            height = personDto.height
+            weight = personDto.weight
+        }.apply {
+            changeCompany(personDto.company)
+            updateIsMarried(personDto.isMarriedNotNull)
+         }.apply {
+            personDto.personId?.let { updateId(it) }
+            personDto.age?.let { changeAge(it) }
+        }
 
 }
